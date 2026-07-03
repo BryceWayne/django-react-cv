@@ -10,10 +10,10 @@ The project is structured into two main directories:
 
 ### Backend Details
 - Configured **Django REST Framework** with `rest_framework.authtoken` for token-based authentication.
+- Configured **WhiteNoise** to serve the statically built React frontend assets from the Django process, meaning both the frontend and API share a single domain.
 - Created `Camera` and `CVEvent` models to represent the state of the security cameras and the events logged by the hypothetical computer vision models.
 - Set up a database seed script (`seed.py`) that populated the SQLite database with 3 active cameras, 1 offline camera, and a rolling log of mock CV events over the last hour.
 - Added a superuser `admin` with password `password123` for demonstration purposes.
-- Enabled CORS via `django-cors-headers` so the React frontend can easily communicate with the API during development.
 
 ### Frontend Details
 - Initialized the Vite React application and installed `react-router-dom` for client-side routing and `lucide-react` for beautiful iconography.
@@ -26,18 +26,17 @@ The project is structured into two main directories:
 
 ## How to Run the Application
 
-### Option 1: Using Docker (Recommended)
-You can spin up the entire platform using Docker Compose. This will build a production-ready Nginx container for the React frontend and a Gunicorn container for the Django backend.
+### Option 1: Using Docker (Unified Container)
+The entire platform is unified into a single Docker image. The React frontend is built statically and served by the Django backend using WhiteNoise.
 
 ```bash
-docker compose up --build -d
+docker build -t sentinel-cv .
+docker run -p 8000:8000 sentinel-cv
 ```
-Once running:
-- **Frontend Dashboard**: http://localhost
-- **Backend API**: http://localhost:8000/api/
+Once running, the full platform is available at: http://localhost:8000
 
 ### Option 2: Local Development Setup
-You can run both servers simultaneously in separate terminal windows.
+You can run both servers simultaneously in separate terminal windows for hot-reloading.
 
 **Terminal 1 (Django Backend):**
 ```bash
@@ -53,5 +52,11 @@ npm run dev
 ```
 
 Once both are running, open the local Vite URL (typically `http://localhost:5173`) in your browser. Log in using `admin` / `password123` to view the live dashboard!
+
+### Option 3: Cloud Run Deployment
+The unified container can be directly deployed to Google Cloud Run:
+```bash
+gcloud run deploy sentinel --source . --region us-central1 --port 8000 --allow-unauthenticated
+```
 
 > **Note**: The Dashboard simulates real-time activity by polling the Django API every 10 seconds for new events and triggering CSS-based bounding box mockups on the camera feeds.
