@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { fetchCameras, fetchEvents, logout } from '../api';
 import CameraFeed from '../components/CameraFeed';
 import EventLog from '../components/EventLog';
-import { Shield, LayoutDashboard, Settings, LogOut } from 'lucide-react';
+import Layout from '../components/Layout';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [cameras, setCameras] = useState([]);
@@ -23,7 +23,8 @@ const Dashboard = () => {
       } catch (err) {
         console.error("Failed to fetch data", err);
         if (err.message.includes('401') || err.message === 'Failed to fetch') {
-          handleLogout();
+          logout();
+          navigate('/login');
         }
       } finally {
         setLoading(false);
@@ -31,15 +32,9 @@ const Dashboard = () => {
     };
     loadData();
     
-    // Polling mock
     const interval = setInterval(loadData, 10000);
     return () => clearInterval(interval);
-  }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -50,38 +45,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-950 overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col">
-        <div className="p-6 flex items-center gap-3">
-          <Shield className="w-8 h-8 text-blue-500" />
-          <h1 className="text-xl font-display font-bold text-white tracking-wide">Sentinel CV</h1>
-        </div>
-        
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <a href="#" className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20">
-            <LayoutDashboard className="w-5 h-5" />
-            <span className="font-medium">Dashboard</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 rounded-lg transition-colors">
-            <Settings className="w-5 h-5" />
-            <span className="font-medium">Settings</span>
-          </a>
-        </nav>
-        
-        <div className="p-4 border-t border-slate-800">
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col p-6 gap-6 h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+    <Layout>
+      <div className="flex-1 flex flex-col p-6 gap-6 h-full overflow-hidden">
         <header className="flex justify-between items-center shrink-0">
           <div>
             <h2 className="text-2xl font-display font-semibold text-white">Live Operations</h2>
@@ -109,7 +74,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

@@ -14,9 +14,9 @@ Camera.objects.all().delete()
 CVEvent.objects.all().delete()
 
 # Create Mock Cameras
-c1 = Camera.objects.create(name="Front Door Entrance", location="Building A, Floor 1", status="active", stream_url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
-c2 = Camera.objects.create(name="Parking Lot West", location="Outdoor", status="active", stream_url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
-c3 = Camera.objects.create(name="Server Room", location="Building B, Floor 3", status="active", stream_url="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")
+c1 = Camera.objects.create(name="Front Door Entrance", location="Building A, Floor 1", status="active", stream_url="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4")
+c2 = Camera.objects.create(name="Parking Lot West", location="Outdoor", status="active", stream_url="https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4")
+c3 = Camera.objects.create(name="Server Room", location="Building B, Floor 3", status="active", stream_url="https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4")
 c4 = Camera.objects.create(name="Loading Dock", location="Building A, Rear", status="offline", stream_url="")
 
 cameras = [c1, c2, c3]
