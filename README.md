@@ -30,7 +30,7 @@ The project is structured into two main directories:
 You can spin up the entire platform using Docker Compose. This will build a production-ready Nginx container for the React frontend and a Gunicorn container for the Django backend.
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 Once running:
 - **Frontend Dashboard**: http://localhost
