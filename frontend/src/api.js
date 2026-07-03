@@ -38,6 +38,19 @@ export const fetchEvents = async () => {
   return response.json();
 };
 
+export const createEvent = async (eventData) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/events/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Token ${token}`,
+    },
+    body: JSON.stringify(eventData),
+  });
+  return response.json();
+};
+
 export const logout = () => {
   localStorage.removeItem('token');
 };

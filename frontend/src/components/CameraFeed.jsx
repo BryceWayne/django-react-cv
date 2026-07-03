@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Camera, Activity } from 'lucide-react';
+import { createEvent } from '../api';
 
 const CameraFeed = ({ camera }) => {
   const [hasEvent, setHasEvent] = useState(false);
@@ -7,24 +8,39 @@ const CameraFeed = ({ camera }) => {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    // Randomly trigger mock CV events (bounding boxes) on the video feed
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (camera.status === 'active' && Math.random() > 0.6) {
         setHasEvent(true);
-        // Generate random bounding box position and size
+        const label = Math.random() > 0.5 ? 'Person' : 'Vehicle';
+        const conf = (Math.random() * 15 + 85).toFixed(1);
+        
         setBbox({
           top: Math.random() * 50 + 10,
           left: Math.random() * 50 + 10,
           width: Math.random() * 20 + 10,
           height: Math.random() * 30 + 15,
-          label: Math.random() > 0.5 ? 'Person' : 'Vehicle',
-          conf: (Math.random() * 15 + 85).toFixed(1)
+          label: label,
+          conf: conf
         });
+        
+        // Post real event to the backend so it populates the log
+        const eventType = label === 'Person' ? 'person_detected' : 'vehicle';
+        try {
+          await createEvent({
+            camera: camera.id,
+            event_type: eventType,
+            confidence: parseFloat(conf) / 100,
+            details: `Detected ${label} with ${conf}% confidence`
+          });
+        } catch (e) {
+          console.error("Failed to post mock event", e);
+        }
+
         setTimeout(() => setHasEvent(false), 2500); // Box stays for 2.5s
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, [camera.status]);
+  }, [camera.status, camera.id]);
 
   return (
     <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-700/50 group h-full min-h-[250px]">
