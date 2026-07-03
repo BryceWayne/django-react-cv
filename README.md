@@ -26,6 +26,17 @@ The project is structured into two main directories:
 
 ## How to Run the Application
 
+### Option 1: Using Docker (Recommended)
+You can spin up the entire platform using Docker Compose. This will build a production-ready Nginx container for the React frontend and a Gunicorn container for the Django backend.
+
+```bash
+docker-compose up --build -d
+```
+Once running:
+- **Frontend Dashboard**: http://localhost
+- **Backend API**: http://localhost:8000/api/
+
+### Option 2: Local Development Setup
 You can run both servers simultaneously in separate terminal windows.
 
 **Terminal 1 (Django Backend):**
