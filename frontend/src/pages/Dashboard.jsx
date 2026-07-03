@@ -62,14 +62,14 @@ const Dashboard = () => {
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
           {/* Camera Grid */}
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr h-full overflow-y-auto pr-2 pb-4">
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-[minmax(250px,1fr)] h-full overflow-y-auto pr-2 pb-4 min-h-0">
             {cameras.map(camera => (
               <CameraFeed key={camera.id} camera={camera} />
             ))}
           </div>
 
           {/* Event Log */}
-          <div className="h-full pb-4">
+          <div className="h-full pb-4 min-h-0">
             <EventLog events={events} />
           </div>
         </div>
