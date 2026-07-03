@@ -24,6 +24,28 @@ The project is structured into two main directories:
 - **CameraFeed Component**: Renders a mock camera stream using a mix of CSS gradients and animations to simulate a live video loop. It also includes dynamic bounding box overlays (e.g., "Person detected: 98%") that trigger intermittently to simulate real-time computer vision inference.
 - **EventLog Component**: Fetches and displays a color-coded log of recent events from the Django backend, giving a unified view of all system alerts (motion, vehicles, persons).
 
+## Testing & CI/CD
+
+This project includes comprehensive automated tests for both the backend and frontend, as well as a continuous integration pipeline.
+
+### Running Backend Tests
+The backend uses Django's built-in testing framework along with Django Rest Framework's `APITestCase`.
+```bash
+cd backend
+source venv/bin/activate
+python manage.py test
+```
+
+### Running Frontend Tests
+The frontend uses Vitest and React Testing Library for unit and component testing.
+```bash
+cd frontend
+npm run test
+```
+
+### CI/CD Pipeline
+A GitHub Actions workflow is configured in `.github/workflows/ci.yml`. It automatically runs both the backend and frontend test suites concurrently on any push or pull request to the `main` branch.
+
 ## How to Run the Application
 
 ### Option 1: Using Docker (Unified Container)
