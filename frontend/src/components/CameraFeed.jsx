@@ -1,45 +1,82 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Camera, Activity } from 'lucide-react';
 import { createEvent } from '../api';
+import * as tf from '@tensorflow/tfjs';
+import * as cocossd from '@tensorflow-models/coco-ssd';
 
 const CameraFeed = ({ camera }) => {
   const [hasEvent, setHasEvent] = useState(false);
-  const [bbox, setBbox] = useState({ top: 0, left: 0, width: 0, height: 0, label: '', conf: 0 });
+  const [bboxes, setBboxes] = useState([]);
+  const [modelLoading, setModelLoading] = useState(true);
   const videoRef = useRef(null);
+  const lastEventTime = useRef(0);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      if (camera.status === 'active' && Math.random() > 0.6) {
-        setHasEvent(true);
-        const label = Math.random() > 0.5 ? 'Person' : 'Vehicle';
-        const conf = (Math.random() * 15 + 85).toFixed(1);
+    if (camera.status !== 'active') return;
+
+    let model = null;
+    let animationFrameId;
+    let isDetecting = false;
+
+    const loadModelAndDetect = async () => {
+      await tf.ready();
+      model = await cocossd.load();
+      setModelLoading(false);
+      detectFrame();
+    };
+
+    const detectFrame = async () => {
+      if (videoRef.current && model && videoRef.current.readyState === 4 && !isDetecting) {
+        isDetecting = true;
+        const video = videoRef.current;
+        const predictions = await model.detect(video);
         
-        setBbox({
-          top: Math.random() * 50 + 10,
-          left: Math.random() * 50 + 10,
-          width: Math.random() * 20 + 10,
-          height: Math.random() * 30 + 15,
-          label: label,
-          conf: conf
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+        
+        const newBboxes = predictions.map(pred => {
+          const [x, y, width, height] = pred.bbox;
+          return {
+            left: (x / videoWidth) * 100,
+            top: (y / videoHeight) * 100,
+            width: (width / videoWidth) * 100,
+            height: (height / videoHeight) * 100,
+            label: pred.class,
+            conf: Math.round(pred.score * 100)
+          };
         });
         
-        // Post real event to the backend so it populates the log
-        const eventType = label === 'Person' ? 'person_detected' : 'vehicle';
-        try {
-          await createEvent({
-            camera: camera.id,
-            event_type: eventType,
-            confidence: parseFloat(conf) / 100,
-            details: `Detected ${label} with ${conf}% confidence`
-          });
-        } catch (e) {
-          console.error("Failed to post mock event", e);
-        }
+        setBboxes(newBboxes);
+        setHasEvent(newBboxes.length > 0);
 
-        setTimeout(() => setHasEvent(false), 2500); // Box stays for 2.5s
+        const now = Date.now();
+        if (newBboxes.length > 0 && now - lastEventTime.current > 5000) {
+          const highestConf = newBboxes.reduce((prev, current) => (prev.conf > current.conf) ? prev : current);
+          if (highestConf.conf > 50) {
+            lastEventTime.current = now;
+            try {
+              createEvent({
+                camera: camera.id,
+                event_type: highestConf.label === 'person' ? 'person_detected' : 'vehicle',
+                confidence: highestConf.conf / 100,
+                details: `Detected ${highestConf.label} with ${highestConf.conf}% confidence`
+              });
+            } catch (e) {
+              console.error("Failed to post CV event", e);
+            }
+          }
+        }
+        isDetecting = false;
       }
-    }, 4000);
-    return () => clearInterval(interval);
+      
+      animationFrameId = requestAnimationFrame(detectFrame);
+    };
+
+    loadModelAndDetect();
+
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
   }, [camera.status, camera.id]);
 
   return (
@@ -65,22 +102,30 @@ const CameraFeed = ({ camera }) => {
         </div>
       )}
 
-      {/* CV Bounding Box Mock */}
-      {hasEvent && camera.status === 'active' && (
+      {/* Loading overlay for ML model */}
+      {camera.status === 'active' && modelLoading && (
+        <div className="absolute top-0 right-0 p-2 text-xs text-blue-400 bg-black/50 rounded-bl backdrop-blur">
+          Loading CV Model...
+        </div>
+      )}
+
+      {/* CV Bounding Boxes */}
+      {camera.status === 'active' && bboxes.map((b, i) => (
         <div 
-          className="absolute border-2 border-red-500 bg-red-500/10 pointer-events-none shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300"
+          key={i}
+          className="absolute border-2 border-red-500 bg-red-500/10 pointer-events-none shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75"
           style={{
-            top: `${bbox.top}%`,
-            left: `${bbox.left}%`,
-            width: `${bbox.width}%`,
-            height: `${bbox.height}%`
+            top: `${b.top}%`,
+            left: `${b.left}%`,
+            width: `${b.width}%`,
+            height: `${b.height}%`
           }}
         >
           <div className="absolute -top-6 left-[-2px] bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-t uppercase tracking-wider whitespace-nowrap shadow-lg">
-            {bbox.label}: {bbox.conf}%
+            {b.label}: {b.conf}%
           </div>
         </div>
-      )}
+      ))}
 
       {/* Overlay UI Header */}
       <div className="absolute top-0 left-0 right-0 p-3 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex justify-between items-start pointer-events-none">
