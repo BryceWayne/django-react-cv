@@ -31,4 +31,4 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8000
 
 # Start gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "cv_platform.wsgi:application"]
+CMD ["timeout", "900s", "gunicorn", "--bind", "0.0.0.0:8000", "cv_platform.wsgi:application"]
